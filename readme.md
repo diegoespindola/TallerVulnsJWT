@@ -64,9 +64,26 @@ Las siguientes herramientas deben estar instaladas
 
 ### No valida firma
 
-Este ataque aprovecha que algunas implementaciones de librerias de JWT tienen distintos metodos para validar el token y obtener los claims, entonces algunos desarroladores obtienen los claims antes de validar la firma del token.
+Este ataque aprovecha que algunas implementaciones de librerias de JWT tienen distintos metodos para validar el token y obtener los claims, entonces algunos desarroladores obtienen los claims antes de validar la firma del token. la que podria ser invalida.
 
 [Laboratorio](https://portswigger.net/web-security/jwt/lab-jwt-authentication-bypass-via-unverified-signature)
+
+- Tal como dice el laboratorio, hay que loguearse con las credenciales wiener:peter todo esto pormedio de CAIDO
+- Con lo anterior obtenemos un JWT y lo llevamos a [token.dev](https://token.dev/)
+- Podemos observar que trae un claim llamado "sub" con el login y segun las indicaciones del lab debemos loguearnos con el usuario **administrator**
+- Modificamos el claim reemplazando wiener por administrator
+- La herramienta esta usando una firma propia, no es la firma del sitio, por lo que al validar el token con la clave original deberia ser rechazado
+- Logueados como wiener vamos a la seccion de administrador que indica el lab https://xx.web-security-academy.net/admin 
+- Desde CAIDO enviamos ese request a **Replay***
+- Reemplazamos el token por el generado y click a **Send**
+- para automatizar el reemplazo del token vamos a **Match & Replace**
+	- Creamos una nueva regla
+		- Section : Request Header
+		- Matcher : String
+		- Replacer: String
+	- activar
+- Navegamos
+
 
 ### Alg none
 
