@@ -4,7 +4,7 @@ Un taller mas sobre vulnerabilidades en JWT, este es practico, paso a paso y en 
 
 Toda la teoria y conocimientos previos seran explicados en el taller en vivo. 
 
-Resolveremos los laboratorios de JWT de Portswigger Academy pero sin BurpSuite.
+Resolveremos los laboratorios de JWT de Portswigger Academy pero sin BurpSuite, con [CAIDO](https://caido.io/).
 
 ## Laboratorio
 
@@ -13,8 +13,9 @@ Para realizar el taller paso a paso debemos tener lo siguiente:
 ### Webs
 
  - Necesitamos una cuenta activa en la plataforma de [https://portswigger.net/](https://portswigger.net/users/register)
- - Usaremos https://token.dev/ para revisar los jwt.
- - Para transformar los certificados usaremos <https://8gwifi.org/jwkconvertfunctions.jsp>
+ - Usaremos [token.dev](https://token.dev/) para revisar los jwt.
+ - Tambien [jwt.io](https://www.jwt.io/)
+ - Para transformar los certificados usaremos [JWK to PEM Convertor online](https://8gwifi.org/jwkconvertfunctions.jsp)
 
 ### Diccionarios
 
@@ -55,14 +56,15 @@ Las siguientes herramientas deben estar instaladas
 - #### JWT-TOOL 
 
 	Instalaremos [JWT_TooL](https://github.com/ticarpi/jwt_tool)
+	```shell
+	git clone https://github.com/ticarpi/jwt_tool
 
-	`git clone https://github.com/ticarpi/jwt_tool`
-
-	`python3 -m pip install -r requirements.txt`
+	python3 -m pip install -r requirements.txt
+	```
 
 ## Vulnerabilidades
 
-### No valida firma
+### 1. No valida firma
 
 Este ataque aprovecha que algunas implementaciones de librerias de JWT tienen distintos metodos para validar el token y obtener los claims, entonces algunos desarroladores obtienen los claims antes de validar la firma del token. la que podria ser invalida.
 
@@ -76,22 +78,38 @@ Este ataque aprovecha que algunas implementaciones de librerias de JWT tienen di
 - Logueados como wiener vamos a la seccion de administrador que indica el lab https://xx.web-security-academy.net/admin 
 - Desde CAIDO enviamos ese request a **Replay***
 - Reemplazamos el token por el generado y click a **Send**
-- para automatizar el reemplazo del token vamos a **Match & Replace**
+- Para automatizar el reemplazo del token vamos a **Match & Replace**
 	- Creamos una nueva regla
 		- Section : Request Header
-		- Matcher : String
-		- Replacer: String
+		- Matcher : String (token original)
+		- Replacer: String (token falsificado)
 	- activar
 - Navegamos
 
 
-### Alg none
+### 2. Alg none
 
 Esta vulnerabilidad se aprovecha que algunas implementaciones utilizan siempre el algoritmo indicado en la cabecera para validar el token. 
 
 [Laboratorio](https://portswigger.net/web-security/jwt/lab-jwt-authentication-bypass-via-flawed-signature-verification)
 
-### Claves debiles
+- Tal como dice el laboratorio, hay que loguearse con las credenciales wiener:peter todo esto pormedio de CAIDO
+- Con lo anterior obtenemos un JWT y lo llevamos a [token.dev](https://token.dev/)
+- Podemos observar que trae un claim llamado "sub" con el login y segun las indicaciones del lab debemos loguearnos con el usuario **administrator**
+- Modificamos el claim reemplazando wiener por administrator
+- En la seccion de **Header** modificamos el valor del claim "alg" a "none"
+- Logueados como wiener vamos a la seccion de administrador que indica el lab https://xx.web-security-academy.net/admin 
+- Desde CAIDO enviamos ese request a **Replay***
+- Reemplazamos el token por el generado y click a **Send**
+- Para automatizar el reemplazo del token vamos a **Match & Replace**
+	- Creamos una nueva regla
+		- Section : Request Header
+		- Matcher : String (token original)
+		- Replacer: String (token falsificado)
+	- activar
+- Navegamos
+
+### 3. Claves debiles
 
 Un token con una clave debil puede ser facilmente falsificado, obteniendo la clave por fuerza bruta.
 
@@ -120,7 +138,7 @@ Un token con una clave debil puede ser facilmente falsificado, obteniendo la cla
 
 
 
-### jwk injection
+### 4. jwk injection
 
 Inyectaremos la clave para validar el token directamente en el header del token
 
@@ -130,7 +148,7 @@ Inyectaremos la clave para validar el token directamente en el header del token
 
 
 
-### Key confusion attack
+### 5. Key confusion attack
 
 Este ataque se aprovecha que algunas librerias usan siempre el algoritmo que viene en el Header par validar los tokens, entonces se cambia el algoritmo de cifrado desde uno asincronico(clave de cifrado y validacion distintas) como el RS256 a uno sincronico(clace de firmado distinta a la clave de validacion) como es el HS256, basicamente el sistema deberia validar con la misma clave el token firmado con la clave publica, entonces firmamos el jwt con el algoritmo sincronico y usamos la misma clave publica (de validacion) para firmar el token. en resumen el sistema se confunde y usa la clave publica como clave privada.
 
