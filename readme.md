@@ -6,7 +6,7 @@ Toda la teoria y conocimientos previos seran explicados en el taller en vivo.
 
 Resolveremos los laboratorios de JWT de Portswigger Academy pero sin BurpSuite, con [CAIDO](https://caido.io/).
 
-## Laboratorio
+## Laboratorio/Herramientas
 
 Para realizar el taller paso a paso debemos tener lo siguiente:
 
@@ -16,19 +16,20 @@ Para realizar el taller paso a paso debemos tener lo siguiente:
  - Usaremos [token.dev](https://token.dev/) para revisar los jwt.
  - Tambien [jwt.io](https://www.jwt.io/)
  - Para transformar los certificados usaremos [JWK to PEM Convertor online](https://8gwifi.org/jwkconvertfunctions.jsp)
+ - para generar jwk usaremos [simple JSON Web Key generator](https://mkjwk.org/)
 
 ### Diccionarios
 
 #### SecLists
 Usaremos un archivo de la coleccion  [SecLists](https://github.com/danielmiessler/SecLists) de Daniel Miessler.
-
-`git clone https://github.com/danielmiessler/SecLists.git`
-
+```shell
+git clone https://github.com/danielmiessler/SecLists.git`
+```
 #### jwt-secrets
 Usaremos el archivo de claves filtradas de jwt [jwt-secrets](https://github.com/wallarm/jwt-secrets/) de Wallarm.
-
-`git clone https://github.com/wallarm/jwt-secrets.git`
-
+```shell
+git clone https://github.com/wallarm/jwt-secrets.git`
+```
 
 ### Herramientas
 
@@ -36,7 +37,7 @@ Las siguientes herramientas deben estar instaladas
 
 - #### CAIDO
 
-	Debemos crear una cuenta en <https://caido.io/> y descargar el instalador para nuestro sistema operativo
+	Debemos crear una cuenta en [caido.io](https://caido.io/) y descargar el instalador para nuestro sistema operativo
 
 - #### GIT
 
@@ -47,7 +48,7 @@ Las siguientes herramientas deben estar instaladas
 	Instalaremos Python 3 segun las siguientes [instrucciones](https://www.python.org/downloads/)
 
 - #### Ffuf
-	instalaremos Ffuf segun las instrucciones en la url <https://github.com/ffuf/ffuf>
+	instalaremos Ffuf segun las instrucciones en la url de su repo [github](https://github.com/ffuf/ffuf)
 
 - #### HashCat
 
@@ -140,17 +141,53 @@ Un token con una clave debil puede ser facilmente falsificado, obteniendo la cla
 
 ### 4. jwk injection
 
-Inyectaremos la clave para validar el token directamente en el header del token
+Inyectaremos la clave para validar el token directamente en el header del token, este ataque se basa en que algunas implementaciones, validan con la clave publica sin discriminar el origen de esta, por lo que  genereraremos una jwk RSA y usaremos su clave privada para firmar nuestro tokekn mientras que la clave publica para validar la firma la incrustaremos en el header del token por lo que el sistema la usara para vaerificar la firma de nuestro token. 
 
 [Laboratorio](https://portswigger.net/web-security/jwt/lab-jwt-authentication-bypass-via-jwk-header-injection)
 
-
-
+- Primero vamos a generar un jwk en el sitio [simple JSON Web Key generator](https://mkjwk.org/):
+	- Key Size	: 2048
+	- Key Use	: en blanco
+	- Algorithm	: RS256:RSA
+	- Show X.509: Yes
+	- Click en **Generate**
+- Tal como dice el laboratorio, hay que loguearse con las credenciales wiener:peter todo esto pormedio de CAIDO
+- Con lo anterior obtenemos un JWT y lo llevamos a [token.dev](https://token.dev/)
+- Podemos observar que trae un claim llamado "sub" con el login y segun las indicaciones del lab debemos loguearnos con el usuario **administrator**
+- Modificamos el claim reemplazando wiener por administrator
+- En el header agregaremos un nodo al json llamado "jwk" y en el valor de este pegaremos el campo public key del jwk rsa generado al inicio
+	```json
+	{
+		"kty": "RSA",
+		"e": "AQAB",
+		"kid": "HEE-JCrNGpgcWdju9ZFp-pKvua9JRY7ztiwhIJZh5S8",
+		"alg": "RS256",
+		"n": "m1w0BbcFuB1l1Q6yfuXqtwz_n6QqtNABz74sbHvDp5wkqe3JAPBq7jd21IlPECL3q3ArzgCROIG7_j7wD2yQ-Ziw44MISpteMkUapbDToV__vEgiMj2gk2ACo4bTK5GfFaKTx5Sh28ayWslPHJn7KKKUElYzgPK8NCdQiRXf0rjvLjUz-QcDrmCi3hsn08LVxboG30RGVEfG0HTXP7mX3IySszvqMNRLqr2YBqUgQC1LuS-THHVdBzWEFYZlKj6HlgZoYiXqQNG5MHoqns2HsoudmrGCbFXszH_20UYFxFPVsRZYqihIb6sZJo2fzaY0UEbt2qIHY8UeyzskeBQyeQ"
+	}
+	```
+	deberia quedar algo similar a esto 
+	```json
+	{
+	"kid": "HEE-JCrNGpgcWdju9ZFp-pKvua9JRY7ztiwhIJZh5S8",
+	"alg": "RS256",
+	"jwk": {
+		"kty": "RSA",
+		"e": "AQAB",
+		"kid": "HEE-JCrNGpgcWdju9ZFp-pKvua9JRY7ztiwhIJZh5S8",
+		"alg": "RS256",
+		"n": "m1w0BbcFuB1l1Q6yfuXqtwz_n6QqtNABz74sbHvDp5wkqe3JAPBq7jd21IlPECL3q3ArzgCROIG7_j7wD2yQ-Ziw44MISpteMkUapbDToV__vEgiMj2gk2ACo4bTK5GfFaKTx5Sh28ayWslPHJn7KKKUElYzgPK8NCdQiRXf0rjvLjUz-QcDrmCi3hsn08LVxboG30RGVEfG0HTXP7mX3IySszvqMNRLqr2YBqUgQC1LuS-THHVdBzWEFYZlKj6HlgZoYiXqQNG5MHoqns2HsoudmrGCbFXszH_20UYFxFPVsRZYqihIb6sZJo2fzaY0UEbt2qIHY8UeyzskeBQyeQ"
+	}
+	}
+	```
+- Luego abajo en el campo Public Key de [token.dev](https://token.dev/) pegaremos el texto generado en el campo **Public Key (X.509 PEM Format)**
+- Y en el campo Private Key de [token.dev](https://token.dev/) pegaremos el texto generado en el campo **Private Key (X.509 PEM Format)**
+- Ya tenemos nuestro token firmado con nuestra propia clave privada
+- lo reemplazamos en CAIDO y navegamos.
 
 
 ### 5. Key confusion attack
 
-Este ataque se aprovecha que algunas librerias usan siempre el algoritmo que viene en el Header par validar los tokens, entonces se cambia el algoritmo de cifrado desde uno asincronico(clave de cifrado y validacion distintas) como el RS256 a uno sincronico(clace de firmado distinta a la clave de validacion) como es el HS256, basicamente el sistema deberia validar con la misma clave el token firmado con la clave publica, entonces firmamos el jwt con el algoritmo sincronico y usamos la misma clave publica (de validacion) para firmar el token. en resumen el sistema se confunde y usa la clave publica como clave privada.
+Este ataque se aprovecha que algunas librerias usan siempre el algoritmo que viene en el Header para validar los tokens, entonces se cambia el algoritmo de cifrado desde uno asincronico(clave de cifrado y validacion distintas) como el RS256 a uno sincronico(clace de firmado distinta a la clave de validacion) como es el HS256, basicamente el sistema deberia validar con la misma clave el token firmado con la clave publica, entonces firmamos el jwt con el algoritmo sincronico y usamos la misma clave publica (de validacion) para firmar el token. en resumen el sistema se confunde y usa la clave publica como clave privada.
 
 #### Taller:
 
