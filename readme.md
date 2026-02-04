@@ -121,7 +121,7 @@ Un token con una clave debil puede ser facilmente falsificado, obteniendo la cla
 - Usar un ataque de  diccionario para obtener la clave publica del jwt
 
 
-	`hashcat -a 0 -m 16500 <TOKEN> ../jwt-secrets/jwt.secrets.list --show`
+	`hashcat -a 0 -m 16500 <TOKEN> ../jwt-secrets/jwt.secrets.list`
 
 	- `-a 0` ataque modo Straight, es decir linea a linea
 	- `-m 16500` ataque a jwt
@@ -198,7 +198,7 @@ Este ataque se aprovecha que algunas librerias usan siempre el algoritmo que vie
 - Buscamos el token entregado por el servidor, vemos que usa KID si tenemos suerte  deberia haber un archivo con la clave publica con ese id.
 - Usamos ffuf para ver si hay algun archivo esta expuesto con las claves publicas 
 
-	`ffuf -u https://lab1.web-security-academy.net/FUZZ -w ~/tools/diccionarios/SecLists/Discovery/Web-Content/common.txt -mc 200`
+	`ffuf -u https://lab1.web-security-academy.net/FUZZ -w ~/tools/diccionarios/SecLists/Discovery/Web-Content/common.txt -mc 200 -v`
 
 - Con lo anterior descubrimos un archivo https://lab1.web-security-academy.net/jwks.json
 
