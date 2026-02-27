@@ -2,7 +2,7 @@
 
 Un taller mas sobre vulnerabilidades en JWT, este es practico, paso a paso y en español.
 
-Toda la teoria y conocimientos previos seran explicados en el taller en vivo. 
+***Toda la teoria y conocimientos previos son explicados en el taller en vivo, puedes verlo en youtube -->[ACA](https://www.youtube.com/watch?v=ikPCfSeTlTw)<--.*** 
 
 Resolveremos los laboratorios de JWT de Portswigger Academy pero sin BurpSuite, con [CAIDO](https://caido.io/).
 
